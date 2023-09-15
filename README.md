@@ -37,10 +37,11 @@ go run main.go
 ```
 
 This will start the application, and you can access it at [http://localhost:8080](http://localhost:8080).
+
 Few examples:
-[http://localhost:8080/rentals/12](http://localhost:8080/rentals/12)
-[http://localhost:8080/rentals?price_min=9000&price_max=75000](http://localhost:8080/rentals?price_min=9000&price_max=75000)
-[http://localhost:8080/rentals?limit=3&offset=6](http://localhost:8080/rentals?limit=3&offset=6)
+1. [http://localhost:8080/rentals/12](http://localhost:8080/rentals/12)
+2. [http://localhost:8080/rentals?price_min=9000&price_max=75000](http://localhost:8080/rentals?price_min=9000&price_max=75000)
+3. [http://localhost:8080/rentals?limit=3&offset=6](http://localhost:8080/rentals?limit=3&offset=6)
 
 
 ### Running Unit Tests
@@ -53,9 +54,12 @@ go test ./...
 
 This will run all unit tests in the project. You can use additional flags or specify specific test files or directories as needed.
 
-## Configuration
+### Running a load test
 
-Explain how to configure the project, including environment variables, configuration files, or any other relevant settings.
+Please navigate to the loadtest dir and execute the following command. You will need docker.
+```shell
+docker run -p 8089:8089 -v $PWD:/mnt/locust/ locustio/locust -f /mnt/locust/locust.py
+```
 
 ## Contributing
 
