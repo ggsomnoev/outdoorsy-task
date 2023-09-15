@@ -9,10 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+
+// Note: slog requires GO Version 1.21
 func SetDefaultLogger(serviceName string) {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		// AddSource: true,
+		// AddSource: true, // TMI
 	}).WithAttrs([]slog.Attr{slog.String("service", serviceName)})
+	
 	logger := slog.New(logHandler)
 
 	slog.SetDefault(logger)
@@ -51,6 +54,7 @@ func CustomRecoveryWithWriter() gin.HandlerFunc {
 				)
 			}
 		}()
+
 		c.Next()
 	}
 }
