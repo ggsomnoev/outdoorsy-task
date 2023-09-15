@@ -22,19 +22,19 @@ func HandleHealthCheckRequest(c *gin.Context) {
 	dd := HealthStatus{}
 	dd.Status = true
 
-	// if err := DB.GetInstance().Ping(); err != nil {
-	// 	dd.Status = false
-	// 	dd.Entries = append(dd.Entries, HealthEntry{
-	// 		ComponentName: "DB",
-	// 		Status:        false,
-	// 		ErrorMessage:  err.Error(),
-	// 	})
-	// } else {
-	// 	dd.Entries = append(dd.Entries, HealthEntry{
-	// 		ComponentName: "DB",
-	// 		Status:        true,
-	// 	})
-	// }
+	if err := RentalsDB.Ping(); err != nil {
+		dd.Status = false
+		dd.Entries = append(dd.Entries, HealthEntry{
+			ComponentName: "DB",
+			Status:        false,
+			ErrorMessage:  err.Error(),
+		})
+	} else {
+		dd.Entries = append(dd.Entries, HealthEntry{
+			ComponentName: "DB",
+			Status:        true,
+		})
+	}
 
 	c.JSON(http.StatusOK, dd)
 }
