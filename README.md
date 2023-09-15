@@ -40,8 +40,8 @@ This will start the application, and you can access it at [http://localhost:8080
 
 Few examples:
 1. [http://localhost:8080/rentals/12](http://localhost:8080/rentals/12)
-2. [http://localhost:8080/rentals?price_min=9000&price_max=75000](http://localhost:8080/rentals?price_min=9000&price_max=75000)
-3. [http://localhost:8080/rentals?limit=3&offset=6](http://localhost:8080/rentals?limit=3&offset=6)
+2. [http://localhost:8080/rentals?limit=3&offset=6](http://localhost:8080/rentals?limit=3&offset=6)
+3. [http://localhost:8080/rentals?price_min=9000&price_max=75000](http://localhost:8080/rentals?price_min=9000&price_max=75000)
 
 
 ### Running Unit Tests
