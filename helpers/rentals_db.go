@@ -29,15 +29,16 @@ func InitRentalsDbConnection() error {
         return err
     }
 	
-	slog.Info("Successfully connected to the database")
-
+	
 	RentalsDB.SetMaxIdleConns(10)
 	RentalsDB.SetMaxOpenConns(100)
 	RentalsDB.SetConnMaxLifetime(5 * time.Minute)
-
+	
 	if err := RentalsDB.Ping(); err != nil {
-        return err
+		return err
     }
+	
+	slog.Info("Successfully connected to the database")
 
 	// TODO: Override the default logger to JSON format
 

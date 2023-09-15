@@ -30,6 +30,12 @@ A simple go microservice which serves rentals data based on some criteria
 
 ### Running the Project
 
+Before you run the project you need to setup up the DB. Do this only once:
+
+```shell
+docker-compose up -d postgres
+```
+
 To run the project, use the following command:
 
 ```shell
