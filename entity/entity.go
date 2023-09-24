@@ -1,4 +1,4 @@
-package helpers
+package entity
 
 type Rental struct {
 	ID              string `json:"id"`

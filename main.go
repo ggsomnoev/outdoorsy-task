@@ -1,38 +1,34 @@
 package main
 
 import (
-	"log/slog"
-	"simple-rentals-api/helpers"
-	"simple-rentals-api/handlers"
+	"simple-rentals-api/router"	
+	"simple-rentals-api/controller"
+	"simple-rentals-api/service"
+	"simple-rentals-api/repository"
 
-	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"simple-rentals-api/helpers"
+)
+
+var (
+	repo = repository.NewRentalsRepository()
+	s 	 = service.NewRentalService(repo)
+	c 	 = controller.NewRentalController(s)
+	r 	 = router.NewGinRouter()
 )
 
 func init() {
 	helpers.SetDefaultLogger("simple-rentals-api")
 
-	if err := helpers.InitRentalsDbConnection(); err != nil {
-		slog.Error("An error occured trying to connect to DB", slog.String("Error", err.Error()))
-		defer helpers.RentalsDB.Close()
-	}
+	repository.InitRentalsDbConnection()
 }
 
 func main() {
-
-	// The idea here is to convert the default gin logs to JSON format and add additional info, if we need/want.
-	r := gin.New()
-	r.Use(helpers.GinFormatMiddleware())
-	r.Use(helpers.CustomRecoveryWithWriter())
-
-	r.GET("/rentals/:RENTAL_ID", handlers.HandleRental)
-	r.GET("/rentals", handlers.HandleRentals)
+	r.GET("/rentals/:RENTAL_ID", c.HandleRentalRequest)
+	r.GET("/rentals", c.HandleRentalsRequest)
 
 	// Kubernetes extras about the status of the service
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	r.GET("/healthz", helpers.HandleHealthCheckRequest)
+	r.GET("/metrics", c.HandleMetricsRequest)
+	r.GET("/healthz", c.HandleHealthCheckRequest)
 
-	r.Run(":8080")
+	r.SERVE(":8080")
 }
-
-// TODO: add some unit tests

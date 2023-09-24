@@ -4,7 +4,7 @@ A simple go microservice which serves rentals data based on some criteria
 
 ## Prerequisites
 
-- [Go](https://golang.org/) (version 1.21 or higher)
+- [Go](https://golang.org/) (version 1.21 or higher) or/and Docker
 
 ## Installation
 
@@ -30,24 +30,31 @@ A simple go microservice which serves rentals data based on some criteria
 
 ### Running the Project
 
-Before you run the project you need to setup up the DB. Do this only once:
+To run the project with docker:
 
 ```shell
-docker-compose up -d postgres
+docker-compose up -d simple-rentals-api
+docker exec -it simple-rentals-api bash
 ```
 
-To run the project, use the following command:
+Inside the container use the following command:
 
 ```shell
 go run main.go
 ```
 
-This will start the application, and you can access it at [http://localhost:8080](http://localhost:8080).
+This will start the application, and you can access it at [http://localhost/rentals](http://localhost/rentals).
+
+You can add to your machine host file:
+
+```shell
+127.0.0.1 api.outdoorsy.com
+```
 
 Few examples:
-1. [http://localhost:8080/rentals/12](http://localhost:8080/rentals/12)
-2. [http://localhost:8080/rentals?limit=3&offset=6](http://localhost:8080/rentals?limit=3&offset=6)
-3. [http://localhost:8080/rentals?price_min=9000&price_max=75000](http://localhost:8080/rentals?price_min=9000&price_max=75000)
+1. [http://api.outdoorsy.com/rentals/12](http://api.outdoorsy.com/rentals/12)
+2. [http://api.outdoorsy.com/rentals?limit=3&offset=6](http://api.outdoorsy.com/rentals?limit=3&offset=6)
+3. [http://api.outdoorsy.com/rentals?price_min=9000&price_max=75000](http://api.outdoorsy.com/rentals?price_min=9000&price_max=75000)
 
 
 ### Running Unit Tests
@@ -62,7 +69,8 @@ This will run all unit tests in the project. You can use additional flags or spe
 
 ### Running a load test
 
-Please navigate to the loadtest dir and execute the following command. You will need docker.
+Please navigate to the loadtest dir and execute the following command.
+
 ```shell
 docker run -p 8089:8089 -v $PWD:/mnt/locust/ locustio/locust -f /mnt/locust/locust.py
 ```

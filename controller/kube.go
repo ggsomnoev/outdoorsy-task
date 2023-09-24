@@ -1,8 +1,12 @@
-package helpers
+package controller
 
 import (
 	"net/http"
+	
+	rep "simple-rentals-api/repository"
+
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type HealthStatus struct {
@@ -17,12 +21,12 @@ type HealthEntry struct {
 }
 
 
-func HandleHealthCheckRequest(c *gin.Context) {
+func (r *controller) HandleHealthCheckRequest(c *gin.Context) {
 
 	dd := HealthStatus{}
 	dd.Status = true
 
-	if err := RentalsDB.Ping(); err != nil {
+	if err := rep.RentalsDB.Ping(); err != nil {
 		dd.Status = false
 		dd.Entries = append(dd.Entries, HealthEntry{
 			ComponentName: "DB",
@@ -37,4 +41,8 @@ func HandleHealthCheckRequest(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dd)
+}
+
+func (r *controller) HandleMetricsRequest(c *gin.Context) {
+	gin.WrapH(promhttp.Handler())
 }

@@ -1,0 +1,77 @@
+version: '3.6'
+services:
+  # vault:
+  #   image: vault:latest
+  #   container_name: vault
+  #   ports:
+  #     - 8200:8200
+  #   environment:
+  #     - VAULT_TOKEN=root
+  #     - VAULT_ADDR=http://0.0.0.0:8200
+  #     - VAULT_DEV_ROOT_TOKEN_ID=root
+  #     - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+  #   cap_add:
+  #     - IPC_LOCK
+  #   networks:
+  #     - local_network
+  # vault_client:
+  #   image: vault:latest
+  #   restart: on-failure
+  #   container_name: vault_client
+  #   environment:
+  #     - VAULT_TOKEN=root
+  #     - VAULT_ADDR=http://vault:8200
+  #     - VAULT_DEV_ROOT_TOKEN_ID=root
+  #     - VAULT_DEV_LISTEN_ADDRESS=vault:8200
+  #   command: /bin/sh -c "vault secrets enable -path=microservices -version=2 kv &&
+  #       vault kv put microservices/simple-rentals-api/app AppEnv=DEV &&
+  #       vault kv patch microservices/simple-rentals-api/app Mode=DEBUG &&
+  postgres:
+    image: mdillon/postgis:11
+    restart: always
+    environment:
+      - DATABASE_HOST=127.0.0.1
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=testingwithrentals
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./sql-init.sql:/docker-entrypoint-initdb.d/sql-init.sql
+    networks:
+      - local_network
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/:/etc/nginx/conf.d/
+    networks:
+      - local_network   
+  simple-rentals-api:
+    image: golang:1.21
+    container_name: simple-rentals-api
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    command: bash
+    working_dir: /go/src/simple-rentals-api
+    volumes:
+      - ../:/go/src/simple-rentals-api
+    expose:
+      - 8080
+    ports:
+      - "8082:8080"
+    depends_on:
+      - postgres
+      - nginx
+      # - vault
+      # - vault_client
+    environment:
+      VAULT_SERVERS: http://vault:8200
+      VAULT_AUTH_TOKEN: root
+    restart: on-failure:1000
+    networks:
+      - local_network
+networks:
+  local_network:

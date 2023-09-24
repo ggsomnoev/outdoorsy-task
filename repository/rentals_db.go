@@ -1,12 +1,16 @@
-package helpers
+package repository
 
 import (
-    "fmt"
-    "time"
+	"fmt"
+	"time"
+	"context"
 	"log/slog"
 	"database/sql"
 	
 	_ "github.com/lib/pq"
+
+	
+	"simple-rentals-api/entity"
 )
 
 var RentalsDB *sql.DB
@@ -14,62 +18,65 @@ var err error
 
 // TODO: add some unit tests
 
-func InitRentalsDbConnection() error {
+func InitRentalsDbConnection() {
+		
+	slog.Info("Trying to connect to the database...")
+	
 	// TODO: not to use hardcoded variables. Move them to a env file or use Vault
-	host := "127.0.0.1"
-	port := 5434
+	host := "postgres"
+	port := 5432
 	user := "root"
 	password := "root"
 	dbname := "testingwithrentals"
 
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname) //  sslmode=disable not use it on PROD
-    RentalsDB, err = sql.Open("postgres", dsn)
+	RentalsDB, err = sql.Open("postgres", dsn)
 
-    if err != nil {
-        return err
-    }
-	
-	
+	if err != nil {
+		slog.Error("Couldn't open connection to DB", slog.String("Error", err.Error()))
+		return
+	}
+
 	RentalsDB.SetMaxIdleConns(10)
 	RentalsDB.SetMaxOpenConns(100)
 	RentalsDB.SetConnMaxLifetime(5 * time.Minute)
-	
-	if err := RentalsDB.Ping(); err != nil {
-		return err
-    }
-	
-	slog.Info("Successfully connected to the database")
 
-	// TODO: Override the default logger to JSON format
-
-    return nil
-}
-
-
-// TODO: Add the retry mechanism when the db connection fails
-func RetryDBConnection(dsn string) error {	
-	const maxRetries = 5
-	
-	var retryInterval = time.Second	
-
-	for i := 0; i < maxRetries; i++ {				
-		
-		RentalsDB, err = sql.Open("postgres", dsn)
-		
-		if err == nil {
-			slog.Info("Successfully connected to the database")
-			return nil
-		}
-
-		slog.Error("Failed to connect to the database", slog.String("error", err.Error()))
-		slog.Error("Retrying in...", slog.Duration("interval", retryInterval))
-		
-		time.Sleep(retryInterval)
-
-		retryInterval *= 2
+	if err := PingDb(); err != nil {
+		slog.Error("An error occured trying to connect to DB", slog.String("Error", err.Error()))
+		CloseConnection()
+		return
 	}
 
-	return fmt.Errorf("Max retries reached, unable to connect to the database")
+	slog.Info("Successfully connected to the database")
+
+
+	// TODO: Override the default logger to JSON format
+}
+
+func CloseConnection() {
+	if RentalsDB == nil {
+		slog.Error("Db connection is nil")
+		return
+	}
+
+	if err := RentalsDB.Close(); err != nil {
+		slog.Error("Couldn't close DB connection", slog.String("Error", err.Error()))
+	}
+}
+
+func PingDb() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	if RentalsDB == nil {
+		return fmt.Errorf("Db connection is nil")
+	}
+
+	if err := RentalsDB.PingContext(ctx); err != nil {
+		return fmt.Errorf("An error occurred trying to ping DB: %v", err)
+	}
+
+	return nil
 }
 
 var BaseQuery = `
@@ -102,7 +109,7 @@ var BaseQuery = `
 	1=1
 `
 
-func GenerateSQLQuery(params QueryParams) string {
+func GenerateSQLQuery(params entity.QueryParams) string {
 	query := BaseQuery
 
 	if params.PriceMin > 0 {
@@ -127,22 +134,27 @@ func GenerateSQLQuery(params QueryParams) string {
 		query += fmt.Sprintf(" OFFSET %d", params.Offset)
 	}
 
-
 	return query
 }
 
-func ExecuteDatabaseQuery(query string) ([]Rental, error) {
+func ExecuteDatabaseQuery(query string) ([]entity.Rental, error) {
+
+	// if err := PingDb(); err != nil {
+	// 	CloseConnection()
+	// 	// InitRentalsDbConnection()
+	// 	return nil, err
+	// }
 
 	rows, err := RentalsDB.Query(query)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
-    
-    rentals := []Rental{}
-    
-    for rows.Next() {
-        rental := Rental{}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	rentals := []entity.Rental{}
+
+	for rows.Next() {
+		rental := entity.Rental{}
 		if err = rows.Scan(
 			&rental.ID,
 			&rental.Name,
@@ -165,11 +177,11 @@ func ExecuteDatabaseQuery(query string) ([]Rental, error) {
 			&rental.User.FirstName,
 			&rental.User.LastName,
 		); err != nil {
-            return nil, err
-        }
+			return nil, err
+		}
 
-        rentals = append(rentals, rental)
-    }
+		rentals = append(rentals, rental)
+	}
 
-    return rentals, nil
+	return rentals, nil
 }

@@ -3,23 +3,23 @@ package main
 import (
 	"fmt"
 	"testing"
-	"simple-rentals-api/handlers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/appleboy/gofight/v2"
 	"github.com/stretchr/testify/assert"
 )
 
+
 func initEngine() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	r.GET("rentals/:RENTAL_ID", func(c *gin.Context) {
-		handlers.HandleRental(c)
+	r.GET("rentals/:RENTAL_ID", func(ctx *gin.Context) {
+		c.HandleRentalRequest(ctx)
 	})
 
-	r.GET("rentals", func(c *gin.Context) {
-		handlers.HandleRentals(c)
+	r.GET("rentals", func(ctx *gin.Context) {
+		c.HandleRentalsRequest(ctx)
 	})
 
 	return r
